@@ -1,4 +1,4 @@
-
+####https://github.com/sqjin/CellChat
 rm(list=ls())
 load("D:\\xg\\data\\Dengue\\Rdata\\Seurat_control.RData")
 
@@ -291,7 +291,6 @@ fever_cellchat <- readRDS("D:\\xg\\data\\Dengue\\result\\Cellchat_res\\fever.rds
 ###control、fever
 object.list <- list(control = control_cellchat, fever = fever_cellchat)
 cellchat <- mergeCellChat(object.list, add.names = names(object.list))
-####比较交互总数和交互强度\
 pdf("D:\\xg\\data\\Dengue\\result\\Cellchat_res\\compare_cf\\compareInteractions.pdf")
 gg1 <- compareInteractions(cellchat, show.legend = F, group = c(1,2))
 gg2 <- compareInteractions(cellchat, show.legend = F, group = c(1,2), measure = "weight")
