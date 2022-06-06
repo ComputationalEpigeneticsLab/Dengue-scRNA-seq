@@ -67,7 +67,7 @@ p1<-p_cor.up + scale_fill_gradient2(low = "#5573BF", high = "#E25259", mid = "#F
         axis.text.y = element_blank())+
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank())+
-  theme(panel.background = element_blank(),#去除背景
+  theme(panel.background = element_blank(),
         panel.border = element_blank())+
   coord_flip()
 #######
