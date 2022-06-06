@@ -113,9 +113,9 @@ save.image("D:\\xg\\data\\Dengue\\Rdata\\Seurat_severe.RData")
 
 #################################################fisher test
 rm(list = ls())
-load("G:\\DEV\\Rdata\\Seurat_control.RData")
-load("G:\\DEV\\Rdata\\Seurat_fever.RData")
-load("G:\\DEV\\Rdata\\Seurat_severe.RData")
+load("G:\\Dengue\\Rdata\\Seurat_control.RData")
+load("G:\\Dengue\\Rdata\\Seurat_fever.RData")
+load("G:\\Dengue\\Rdata\\Seurat_severe.RData")
 #####
 cell_info<-rbind(control_object@meta.data,fever_object@meta.data,severe_object@meta.data)
 ####
