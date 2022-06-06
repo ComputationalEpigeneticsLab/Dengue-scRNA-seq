@@ -111,7 +111,7 @@ TSNEPlot(severe_object,reduction = "tsne", group.by = "Cell_type",pt.size=1,
 # FeaturePlot(severe_object, features = "CD8A",reduction = "tsne",pt.size = 1.5)
 save.image("D:\\xg\\data\\Dengue\\Rdata\\Seurat_severe.RData")
 
-#################################################fisher test
+#################################################fisher test ,control
 rm(list = ls())
 load("G:\\Dengue\\Rdata\\Seurat_control.RData")
 load("G:\\Dengue\\Rdata\\Seurat_fever.RData")
