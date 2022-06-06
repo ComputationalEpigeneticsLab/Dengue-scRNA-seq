@@ -1,111 +1,36 @@
-library(dplyr)
-library(ggplot2)
-library(Seurat)
-######################################control
 rm(list = ls())
-control_exp<-read.table("D:\\xg\\data\\Dengue\\result\\data\\control_exp.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
-cell_info_res<-read.table("D:\\xg\\data\\Dengue\\result\\data\\cell_info_res.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
-control_object<-CreateSeuratObject(counts = control_exp, project = "PBMC", min.cells = 5)
+exp_all<-read.table("D:\\xg\\data\\DEV\\expression_res.txt",header = T,as.is = T,sep = "\t",stringsAsFactors = F)
+###########################cell infomation
+cell_info<-read.table("D:\\xg\\data\\DEV\\single_cell\\GSE116672_clincal_info.txt",row.names=1,header = T,as.is = T,sep = "\t",stringsAsFactors = F)
+##########################remove unknown cells
+cell_info_res<-cell_info[-which(cell_info$Cell_type=="unknown"),]
+write.table(cell_info_res,"D:\\xg\\data\\DEV\\result\\data\\cell_info_res.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
+exp_known<-exp_all[,rownames(cell_info_res)]
+mRNA_list<-read.table("D:\\xg\\data\\GRch38\\mRNA.txt",header = T,as.is = T,sep = "\t",stringsAsFactors = F)
+exp_mRNA<-exp_known[intersect(mRNA_list$gene_name,rownames(exp_known)),]
+##############################classed by Diseaseseverity
+info_control<-cell_info_res[which(cell_info_res$Diseaseseverity=="control"),]
+info_fever<-cell_info_res[which(cell_info_res$Diseaseseverity=="dengue_fever"),]
+info_severe<-cell_info_res[which(cell_info_res$Diseaseseverity=="severe_dengue"),]
 
-#####################################Calculate the proportion of mitochondrial genes
-control_object[["percent.mt"]] <- PercentageFeatureSet(control_object, pattern = "^MT-")
-VlnPlot(control_object, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-#########################################Remove cell and gene outliers
-control_object <- subset(control_object, subset = nFeature_RNA > 200 & nFeature_RNA < 4000 & percent.mt < 10)
-##########################################update meta.data
-clininfo<-cell_info_res[rownames(control_object@meta.data),]
-control_object@meta.data$Patient_id<-clininfo$Patient_id
-control_object@meta.data$Cell_type<-clininfo$Cell_type
-control_object@meta.data$Sex<-clininfo$Sex
-control_object@meta.data$Diseaseseverity<-clininfo$Diseaseseverity
-#########################################Normalization
-control_object <- NormalizeData(object = control_object, normalization.method = "LogNormalize", scale.factor = 10000)
-#########################################Find Variable Features
-control_object <- FindVariableFeatures(object = control_object, selection.method = "vst", nfeatures = 2000)
-##########################################scaledata and runpca
-all.genes <- rownames(control_object)
-control_object <- ScaleData(control_object, features = all.genes)
-control_object <- RunPCA(control_object, features = VariableFeatures(object = control_object))
-# VizDimLoadings(control_object,dims = 1:2,reduction = "pca")
-# DimPlot(control_object,reduction = "pca")
-# control_object<-RunUMAP(control_object,reduction = "pca",dims = 1:20)
-# DimPlot(control_object, reduction = "umap", group.by = "Cell_type",pt.size = 1,
-#         cols=c("T_cell" = "#4E78B3", "monocyte" = "#8C6AB9", "NK_cell" = "#E48328", 
-#                "NKT_cell" = "#5D9C3D", "B_cell" = "#B7282A", "cDC" = "#775948","pDC"="#CE6CBD"))
-set.seed(101)
-control_object<-RunTSNE(control_object,reduction = "pca",dims = 1:20)
-TSNEPlot(control_object,reduction = "tsne", group.by = "Cell_type",pt.size=1,
-         cols=c("T_cell" = "#4E78B3", "monocyte" = "#8C6AB9", "NK_cell" = "#E48328", 
-                "NKT_cell" = "#5D9C3D", "B_cell" = "#B7282A", "cDC" = "#775948","pDC"="#CE6CBD"))
-############################################CD8A,CD79A
-# FeaturePlot(control_object, features = "CD8A",reduction = "tsne",pt.size = 1.5)
-save.image("D:\\xg\\data\\Dengue\\Rdata\\Seurat_control.RData")
-############################################Fever
-rm(list = ls())
-fever_exp<-read.table("D:\\xg\\data\\Dengue\\result\\data\\fever_exp.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
-cell_info_res<-read.table("D:\\xg\\data\\Dengue\\result\\data\\cell_info_res.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
+control_exp<-exp_mRNA[,intersect(rownames(info_control),colnames(exp_mRNA))]
+fever_exp<-exp_mRNA[,intersect(rownames(info_fever),colnames(exp_mRNA))]
+severe_exp<-exp_mRNA[,intersect(rownames(info_severe),colnames(exp_mRNA))]
+#
+write.table(exp_mRNA,"D:\\xg\\data\\Dengue\\result\\data\\mRNAexp_known.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
 
-fever_object<-CreateSeuratObject(counts = fever_exp, project = "PBMC", min.cells = 5)
-fever_object[["percent.mt"]] <- PercentageFeatureSet(fever_object, pattern = "^MT-")
-#####################################Calculate the proportion of mitochondrial genes
-VlnPlot(fever_object, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-fever_object <- subset(fever_object, subset = nFeature_RNA > 200 & nFeature_RNA < 3000 & percent.mt < 10)
-##########################################update meta.data
-clininfo<-cell_info_res[rownames(fever_object@meta.data),]
-fever_object@meta.data$Patient_id<-clininfo$Patient_id
-fever_object@meta.data$Cell_type<-clininfo$Cell_type
-fever_object@meta.data$Sex<-clininfo$Sex
-fever_object@meta.data$Diseaseseverity<-clininfo$Diseaseseverity
-#########################################Normalization
-fever_object <- NormalizeData(object = fever_object, normalization.method = "LogNormalize", scale.factor = 10000)
-#########################################Find Variable Features
-fever_object <- FindVariableFeatures(object = fever_object, selection.method = "vst", nfeatures = 2000)
-##########################################scaledata and runpca
-all.genes <- rownames(fever_object)
-fever_object <- ScaleData(fever_object, features = all.genes)
-fever_object <- RunPCA(fever_object, features = VariableFeatures(object = fever_object))
-# fever_object<-RunUMAP(fever_object,reduction = "pca",dims = 1:20)
-# DimPlot(fever_object, reduction = "umap", group.by = "Cell_type",pt.size = 1,
-#         cols=c("T_cell" = "#4E78B3", "monocyte" = "#8C6AB9", "NK_cell" = "#E48328", 
-#                "NKT_cell" = "#5D9C3D", "B_cell" = "#B7282A", "cDC" = "#775948","pDC"="#CE6CBD"))
-set.seed(101)
-fever_object<-RunTSNE(fever_object,dims = 1:20)
-TSNEPlot(fever_object,reduction = "tsne", group.by = "Cell_type",pt.size=1,
-         cols=c("T_cell" = "#4E78B3", "monocyte" = "#8C6AB9", "NK_cell" = "#E48328", 
-                "NKT_cell" = "#5D9C3D", "B_cell" = "#B7282A", "cDC" = "#775948","pDC"="#CE6CBD"))
-# FeaturePlot(fever_object, features = "CD8A",reduction = "tsne",pt.size = 1.5)
-save.image("D:\\xg\\data\\Dengue\\Rdata\\Seurat_fever.RData")
+write.table(info_control,"D:\\xg\\data\\Dengue\\result\\data\\info_control.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
+write.table(info_fever,"D:\\xg\\data\\Dengue\\result\\data\\info_fever.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
+write.table(info_severe,"D:\\xg\\data\\Dengue\\result\\data\\info_severe.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
 
-#############################################severe
-rm(list = ls())
-severe_exp<-read.table("D:\\xg\\data\\Dengue\\result\\data\\severe_exp.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
-cell_info_res<-read.table("D:\\xg\\data\\Dengue\\result\\data\\cell_info_res.txt",header=T,as.is=T,sep="\t",stringsAsFactors = F)
-severe_object<-CreateSeuratObject(counts = severe_exp, project = "PBMC", min.cells = 5)
-severe_object[["percent.mt"]] <- PercentageFeatureSet(severe_object, pattern = "^MT-")
-VlnPlot(severe_object, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-severe_object <- subset(severe_object, subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & percent.mt < 10)
-severe_cell_filtered<-as.matrix(severe_object@assays[["RNA"]]@counts)
-clininfo<-cell_info_res[rownames(severe_object@meta.data),]
-##########################################update meta.data
-severe_object@meta.data$Patient_id<-clininfo$Patient_id
-severe_object@meta.data$Cell_type<-clininfo$Cell_type
-severe_object@meta.data$Sex<-clininfo$Sex
-severe_object@meta.data$Diseaseseverity<-clininfo$Diseaseseverity
-#########################################Normalization
-severe_object <- NormalizeData(object = severe_object, normalization.method = "LogNormalize", scale.factor = 10000)
-#########################################Find Variable Features
-severe_object <- FindVariableFeatures(object = severe_object, selection.method = "vst", nfeatures = 2000)
-##########################################scaledata and runpca
-all.genes <- rownames(severe_object)
-severe_object <- ScaleData(severe_object, features = all.genes)
-##
-severe_object <- RunPCA(severe_object, features = VariableFeatures(object = severe_object))
-# severe_object<-RunUMAP(severe_object,reduction = "pca",dims = 1:20)
-
-set.seed(101)
-severe_object<-RunTSNE(severe_object,dims = 1:20)
-TSNEPlot(severe_object,reduction = "tsne", group.by = "Cell_type",pt.size=1,
-         cols=c("T_cell" = "#4E78B3", "monocyte" = "#8C6AB9", "NK_cell" = "#E48328", 
-                "NKT_cell" = "#5D9C3D", "B_cell" = "#B7282A", "cDC" = "#775948","pDC"="#CE6CBD"))
-# FeaturePlot(severe_object, features = "CD8A",reduction = "tsne",pt.size = 1.5)
-save.image("D:\\xg\\data\\Dengue\\Rdata\\Seurat_severe.RData")
+write.table(control_exp,"D:\\xg\\data\\Dengue\\result\\data\\control_exp.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
+write.table(fever_exp,"D:\\xg\\data\\Dengue\\result\\data\\fever_exp.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
+write.table(severe_exp,"D:\\xg\\data\\Dengue\\result\\data\\severe_exp.txt",row.names = T,col.names = T,sep = "\t",
+            quote = F)
