@@ -1,7 +1,7 @@
 # Dengue-scRNA-seq
 ## Dynamic immune ecosystem of dengue infection revealed by single-cell sequencing
 
-Gang Xu#, Yueying Gao#, Tao Pan#, Si Li, Ya Zhang, Jing Guo, Juan Xu*, Yongsheng Li1*, and Xia Li1*.
+Gang Xu#, Yueying Gao#, Tao Pan#, Si Li, Ya Zhang, Jing Guo, Juan Xu*, Yongsheng Li*, and Xia Li*.
 
 ### ABSTRACT
 
